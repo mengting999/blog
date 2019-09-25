@@ -1,17 +1,38 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Http\Tools\Wechat;
+use App\Tools\Tools;
 use Illuminate\Http\Request;
+use App\Libraries\Test;
 use DB;
 
 class LiuYanController extends Controller
 {
-    // public $wechat;
-    // public function __construct(Wechat $wechat)
-    // {
-    // 	$this->wechat=$wechat;
-    // }
+    public $tools;
+    public function __construct(Tools $tools)
+    {
+        $this->tools = $tools;
+    }
+
+    /**
+     * 8月份B卷6题
+     */
+    public function push()
+    {
+        $user_url = 'https://api.weixin.qq.com/cgi-bin/user/get?access_token='.$this->tools->get_wechat_access_token().'&next_openid=';
+        $openid_info = file_get_contents($user_url);
+        $user_result = json_decode($openid_info,1);
+        foreach($user_result['data']['openid'] as $v){
+            $url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token='.$this->tools->get_wechat_access_token();
+            $data = [
+                'touser'=>$v,
+                'template_id'=>'a0vAkKkV9Fh74VrncSD06aTpP2xMfdPvvsUmtYwcBGQ',
+                'data'=>[
+                ]
+            ];
+            $this->tools->curl_post($url,json_encode($data,JSON_UNESCAPED_UNICODE));
+        }
+    }
     public function wechat_login()
     {
     	$redirect_uri='http://www.blog.com/liuyan/wechat_code';
@@ -55,8 +76,10 @@ class LiuYanController extends Controller
 				'uid'=>$uid,
 				'openid'=>$user_wechat['uid']
 			]);
-			$request->session()->put(['uid'=>$user_wechat['uid']]);
-		}
+		    //登陆操作
+            $request->session()->put('uid',$wechat_info->uid);
+            echo "ok";
+		  }
     }
   //  public function index()
   //   {

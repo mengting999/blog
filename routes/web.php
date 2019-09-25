@@ -45,3 +45,10 @@ Route::get('liuyan/wechat_code','LiuYanController@wechat_code');
 Route::any('liuyan/wechat_login','LiuYanController@wechat_login');
 Route::get('liuyan/index','LiuYanController@index');//留言板主页
 Route::get('liuyan/send','LiuYanController@send');
+
+
+
+
+Route::post('wechat/create_menu','MenuController@create_menu');//创建菜单
+Route::get('wechat/menu_list','MenuController@menu_list');
+Route::get('wechat/load_menu','MenuController@load_menu');
