@@ -23,6 +23,7 @@ class EventController extends Controller
         file_put_contents($wechat_log_psth,"\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n",FILE_APPEND);
         //dd($xml_string);
         $xml_obj = simplexml_load_string($xml_string,'SimpleXMLElement',LIBXML_NOCDATA);
+        dd($xml_obj);
         $xml_arr = (array)$xml_obj;
         // dd($xml_arr);
         \Log::Info(json_encode($xml_arr,JSON_UNESCAPED_UNICODE));
