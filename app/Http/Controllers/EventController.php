@@ -15,67 +15,112 @@ class EventController extends Controller
      */
     public function event()
     {
-//        dd($_POST);微信传过来的数据是postman->raw的格式，大POST是拿不到的
-//        echo $_GET['echostr'];//这个玩意是在第一次设置接口配置信息时需要在url里echo一下？echostr=111以表示微信返回给开发者的接口可以用
-        $xml_string=file_get_contents('php://input');//微信返回的格式是xml字符串，用它来获取到
-//        dd($xml_string);
-//        $wechat_log_path=storage_path('logs/wechat/'.date('Y-m-d').'.log');
-        $wechat_log_path=storage_path('logs/wx.log');
-
-        file_put_contents($wechat_log_path,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",FILE_APPEND);
-        file_put_contents($wechat_log_path,$xml_string,FILE_APPEND);
-        file_put_contents($wechat_log_path,"\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n",FILE_APPEND);
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        //$re=file_put_contents(storage_path('logs/wechat/'.date('Y-m-d').'.log'),'123234545',FILE_APPEND);//
-        //注释;咱用这个做，咱们每次接收的数据写入这里面。如果没有这个文件，他是会自己生成的。他的执行模式是覆盖写入。若写入第三个参数mode,会执行相关操作，file_append是追加（不覆盖之前内容），这是一个文件指针(这里指向了末尾)，相关内容：指针和偏移
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// 咱们做的效果，就是做的跟laravel日志一样，蛋直接放在storage->logs里有些许不合适,所以咱创建一个wechat,咱一天存一个,咱们往里面写的内容，就是$xml_string,不能在一个地方写，咱们应该换行，所以写一个标记
-        $xml_obj=simplexml_load_string($xml_string,'SimpleXMLElement',LIBXML_NOCDATA);   //他是把xml转成咱们php能识别的对象.LIBXML_NOCDATA,将 CDATA 设置为文本节点(咱接收的xml解析不了cdata,所以直接百度出来这个的东西)，还差第二个参数classname，规定新对象的 class。,根据定义simplexml_load_string() 函数转换形式良好的 XML 字符串为 SimpleXMLElement 对象，应该就是SimpleXMLElement
-//        dd($xml_obj);
-        $xml_arr=(array)$xml_obj;//强制类型转换:obj->array
-//        dd($xml_arr);
-        \Log::Info(json_encode($xml_arr,JSON_UNESCAPED_UNICODE));//又写了一个laravel日志，他会不会与别的混了呢
+        $xml_string = file_get_contents('php://input');  //获取
+        // dd($xml_string);
+        $wechat_log_psth = storage_path('logs/wechat/'.date('Y-m-d').'.log');
+        file_put_contents($wechat_log_psth,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n",FILE_APPEND);
+        file_put_contents($wechat_log_psth,$xml_string,FILE_APPEND);
+        file_put_contents($wechat_log_psth,"\n<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n\n",FILE_APPEND);
+        //dd($xml_string);
+        $xml_obj = simplexml_load_string($xml_string,'SimpleXMLElement',LIBXML_NOCDATA);
+        dd($xml_obj);
+        $xml_arr = (array)$xml_obj;
+        // dd($xml_arr);
+        \Log::Info(json_encode($xml_arr,JSON_UNESCAPED_UNICODE));
+        //echo $_GET['echostr'];
         //业务逻辑
-
-            //$d=date('Y-m-d,H:i:s',$start);今天凌晨时间
-
-        /////判 断 是 否 应 该 签 到
-        $openid=$xml_arr['FromUserName'];
-        $u_info=DB::connection('test')->table('wechat_openid')->where(['openid'=>$openid])->first();
-        if(empty($u_info)){
-            //根据openid和access-token拿到信息，存入table
-        }
-        $pre_time=$u_info->signin;
-//        $d=date('Y-m-d H:i:s',$pre_time);
-//        $start=strtotime('0:00:00');//今天的0：00
-//          dd($start);
-        $today=date('Y-m-d',time());
-
-
-        $tools = new Tools();
-        if($xml_arr['MsgType']=='event' && $xml_arr['Event']=='subscribe'){
-            $wx_info=DB::connection('myshop')->table('user_weixin')->where(['openid'=>$openid])->first();
-            $user_info=file_get_contents('https://api.weixin.qq.com/cgi-bin/user/info?access_token='.$tools->get_access_token().'&openid='.$openid.'&lang=zh_CN');
-            $u_info=json_decode($user_info,1);
-            $name=$u_info['nickname'];
-//            dd($info);
-            if(!$wx_info){
-                DB::connection('myshop')->table('user_weixin')->insert([
-                    'openid'=>$openid,
-                    'nickname'=>$u_info['nickname'],
-                    'city'=>$u_info['city'],
-                    'country'=>$u_info['country'],
-                    'add_time'=>time()
-                ]);
-                $message = '您好，' . $name.'。当前时间为：'.date('Y-m-d H:i:s',time());
-                $xml_str = '<xml><ToUserName><![CDATA[' . $xml_arr['FromUserName'] . ']]></ToUserName><FromUserName><![CDATA[' . $xml_arr['ToUserName'] . ']]></FromUserName><CreateTime>' . time() . '</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[' . $message . ']]></Content></xml>';
-                echo $xml_str;
-            }elseif($wx_info){
-                $message = '欢迎回来，' . $name.'。当前时间为：'.date('Y-m-d H:i:s',time());
-                $xml_str = '<xml><ToUserName><![CDATA[' . $xml_arr['FromUserName'] . ']]></ToUserName><FromUserName><![CDATA[' . $xml_arr['ToUserName'] . ']]></FromUserName><CreateTime>' . time() . '</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[' . $message . ']]></Content></xml>';
-                echo $xml_str;
+        if($xml_arr['MsgType'] == 'event' && $xml_arr['Event'] == 'CLICK'){
+            if($xml_arr['EventKey'] == 'sign'){
+                //签到
+                $today = date('Y-m-d',time()); //当天日期
+                $last_day = date('Y-m-d',strtotime('-1 days'));  //昨天
+                $openid_info = DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->first();
+                if(empty($openid_info)){
+                    //没有数据，存入
+                    DB::connection('myshop')->table("wechat_openid")->insert([
+                        'openid'=>$xml_arr['FromUserName'],
+                        'add_time'=>time()
+                    ]);
+                }
+                $openid_info = DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->first();
+                if($openid_info->sign_day == $today){
+                    //已签到
+                    $message = '您已签到';
+                    $xml_str = '<xml><ToUserName><![CDATA['.$xml_arr['FromUserName'].']]></ToUserName><FromUserName><![CDATA['.$xml_arr['ToUserName'].']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.$message.']]></Content></xml>';
+                    echo $xml_str;
+                }else{
+                    //未签到  积分
+                    if($last_day == $openid_info->sign_day){
+                        //连续签到 五天一轮
+                        if($openid_info->sign_days >= 5){
+                            DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->update([
+                                'sign_days'=>1,
+                                'score' => $openid_info->score + 5,
+                                'sign_day'=>$today
+                            ]);
+                        }else{
+                            DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->update([
+                                'sign_days'=>$openid_info->sign_days + 1,
+                                'score' => $openid_info->score + 5 * ($openid_info->sign_days + 1),
+                                'sign_day'=>$today
+                            ]);
+                        }
+                    }else{
+                        //非连续
+                        //加积分  连续天数变1
+                        DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->update([
+                            'sign_days'=>1,
+                            'score' => $openid_info->score + 5,
+                            'sign_day'=>$today
+                        ]);
+                    }
+                    $message = '签到成功';
+                    $xml_str = '<xml><ToUserName><![CDATA['.$xml_arr['FromUserName'].']]></ToUserName><FromUserName><![CDATA['.$xml_arr['ToUserName'].']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.$message.']]></Content></xml>';
+                    echo $xml_str;
+                }
+            }
+            if($xml_arr['EventKey'] == 'score'){
+                //查几分
+                $openid_info = DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->first();
+                if(empty($openid_info)){
+                    //没有数据，存入
+                    DB::connection('myshop')->table("wechat_openid")->insert([
+                        'openid'=>$xml_arr['FromUserName'],
+                        'add_time'=>time()
+                    ]);
+                    $message = '积分：0';
+                    $xml_str = '<xml><ToUserName><![CDATA['.$xml_arr['FromUserName'].']]></ToUserName><FromUserName><![CDATA['.$xml_arr['ToUserName'].']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.$message.']]></Content></xml>';
+                    echo $xml_str;
+                }else{
+                    $message = '积分：'.$openid_info->score;
+                    $xml_str = '<xml><ToUserName><![CDATA['.$xml_arr['FromUserName'].']]></ToUserName><FromUserName><![CDATA['.$xml_arr['ToUserName'].']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.$message.']]></Content></xml>';
+                    echo $xml_str;
+                }
             }
         }
+        //关注逻辑
+        if($xml_arr['MsgType'] == 'event' && $xml_arr['Event'] == 'subscribe'){
+            //关注
+            //opnid拿到用户基本信息
+            $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token='.$this->tools->get_wechat_access_token().'&openid='.$xml_arr['FromUserName'].'&lang=zh_CN';
+            $user_re = file_get_contents($url);
+            $user_info = json_decode($user_re,1);
+            //存入数据库
+            $db_user = DB::connection('myshop')->table("wechat_openid")->where(['openid'=>$xml_arr['FromUserName']])->first();
+            if(empty($db_user)){
+                //没有数据，存入
+                DB::connection('myshop')->table("wechat_openid")->insert([
+                    'openid'=>$xml_arr['FromUserName'],
+                    'add_time'=>time()
+                ]);
+            }
+            $message = '欢迎回来，' . $name.'。当前时间为：'.date('Y-m-d H:i:s',time());
+            $xml_str = '<xml><ToUserName><![CDATA['.$xml_arr['FromUserName'].']]></ToUserName><FromUserName><![CDATA['.$xml_arr['ToUserName'].']]></FromUserName><CreateTime>'.time().'</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA['.$message.']]></Content></xml>';
+            echo $xml_str;
+        }
+    }
+}
+        
   
 
 
