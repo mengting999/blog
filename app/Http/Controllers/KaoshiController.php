@@ -13,7 +13,7 @@ class KaoshiController extends Controller
 
     public function etc()
     {
-        public function event()
+       public function event()
     {
 //        dd($_POST);微信传过来的数据是postman->raw的格式，大POST是拿不到的
 //        echo $_GET['echostr'];//这个玩意是在第一次设置接口配置信息时需要在url里echo一下？echostr=111以表示微信返回给开发者的接口可以用
@@ -77,5 +77,3 @@ class KaoshiController extends Controller
             }
         }
     }
-
-}
