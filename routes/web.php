@@ -31,9 +31,9 @@ Route::get('/agent/create_qrcode','AgentController@create_qrcode'); //创建二�
 ///
 Route::get('/wechat/tag_list','TagController@tag_list');  //公众号标签列表
 Route::get('/wechat/add_tag','TagController@add_tag');
-Route::post('/wechat/do_add_tag','TagController@do_add_tag');
+Route::get('/wechat/do_add_tag','TagController@do_add_tag');
 Route::get('/wechat/tag_openid_list','TagController@tag_openid_list'); //标签下用户的openid列表
-Route::post('/wechat/tag_openid','TagController@tag_openid'); //为用户打标签
+Route::get('/wechat/tag_openid','TagController@tag_openid'); //为用户打标签
 Route::get('/wechat/user_tag_list','TagController@user_tag_list'); //用户下的标签列表
 Route::get('/wechat/push_tag_message','TagController@push_tag_message'); //推送标签消息
 Route::post('/wechat/do_push_tag_message','TagController@do_push_tag_message'); //执行推送标签消息
@@ -46,6 +46,7 @@ Route::any('liuyan/wechat_login','LiuYanController@wechat_login');
 Route::get('liuyan/index','LiuYanController@index');//留言板主页
 Route::get('liuyan/send','LiuYanController@send');
 
+Route::get('Kaoshi/etc','KaoshiController@etc');
 
 
 
