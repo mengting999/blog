@@ -25,7 +25,7 @@ class KaoshiController extends Controller
         $xml_arr = (array)$xml_obj;
         $wechat_log_psth = storage_path('logs/wechat/'.date('Y-m-d').'.log');
          $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token='.$this->tools->get_wechat_access_token().'&openid=';
-         dd($url);
+         // dd($url);
     }
 
 }
